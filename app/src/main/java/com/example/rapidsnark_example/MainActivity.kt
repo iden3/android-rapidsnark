@@ -30,7 +30,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.rapidsnark_example.ui.theme.Rapidsnark_exampleTheme
-import com.iden3.rapidsnark.*
+import io.iden3.rapidsnark.*
+import io.iden3.rapidsnark.ProveResponse
+import io.iden3.rapidsnark.groth16Prove
+import io.iden3.rapidsnark.groth16ProveWithZKeyFilePath
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException

@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    namespace = "com.iden3.rapidsnark"
+    namespace = "io.iden3.rapidsnark"
     compileSdk = 34
 
     defaultConfig {
