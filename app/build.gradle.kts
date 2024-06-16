@@ -47,7 +47,7 @@ android {
 }
 
 dependencies {
-    implementation(project(":rapidsnark_android"))
+    implementation("io.iden3:rapidsnark:0.0.1-alpha.1")
 
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")

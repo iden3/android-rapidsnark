@@ -30,12 +30,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.rapidsnark_example.ui.theme.Rapidsnark_exampleTheme
-import com.iden3.rapidsnark.*
+
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+
+import io.iden3.rapidsnark.*
 
 
 class MainActivity : ComponentActivity() {

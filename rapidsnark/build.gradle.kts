@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.iden3.rapidsnark"
+    namespace = "io.iden3.rapidsnark"
     compileSdk = 34
 
     defaultConfig {
@@ -16,11 +16,11 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags += "-O2 -frtti -fexceptions -Wall -fstack-protector-all"
-//                abiFilters += listOf("x86", "x86_64", "armeabi-v7a", "arm64-v8a")
                 abiFilters += listOf("x86_64", "arm64-v8a")
             }
         }
         ndk {
+            //noinspection ChromeOsAbiSupport
             abiFilters += listOf("x86_64", "arm64-v8a")
         }
     }
@@ -67,3 +67,5 @@ dependencies {
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.appcompat:appcompat:1.6.1")
 }
+
+apply(from = "publish-package.gradle")
