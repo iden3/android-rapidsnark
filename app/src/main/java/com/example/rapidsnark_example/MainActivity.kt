@@ -1,4 +1,4 @@
-package com.example.rapidsnark_example
+package com.example.android_rapidsnark
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.rapidsnark_example.ui.theme.Rapidsnark_exampleTheme
+import com.example.android_rapidsnark.ui.theme.android_rapidsnarkTheme
 
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Rapidsnark_exampleTheme {
+            android_rapidsnarkTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -121,7 +121,7 @@ fun Greeting() {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    Rapidsnark_exampleTheme {
+    android_rapidsnarkTheme {
         Greeting()
     }
 }

@@ -10,13 +10,13 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Rapidsnark_example"
+        android:theme="@style/Theme.android_rapidsnark"
         tools:targetApi="31">
         <activity
-            android:name="com.example.rapidsnark_example.MainActivity"
+            android:name="com.example.android_rapidsnark.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Rapidsnark_example">
+            android:theme="@style/Theme.android_rapidsnark">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

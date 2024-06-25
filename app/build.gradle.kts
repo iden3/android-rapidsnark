@@ -3,12 +3,21 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+repositories {
+    google()
+    mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/iden3/android-rapidsnark")
+    }
+}
+
 android {
-    namespace = "com.example.rapidsnark_example"
+    namespace = "com.example.android_rapidsnark"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.rapidsnark_example"
+        applicationId = "com.example.android_rapidsnark"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

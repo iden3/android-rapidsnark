@@ -27,7 +27,7 @@ Reads .zkey file directly from filesystem.
 
 
 ```Kotlin
-import com.iden3.rapidsnark.*
+import io.iden3.rapidsnark.*
 
 // ...
 
@@ -41,7 +41,7 @@ val (proof, publicSignals) = groth16ProveWithZKeyFilePath("path/to/zkey", wtns)
 Verifies proof and public signals against verification key.
 
 ```Kotlin
-import com.iden3.rapidsnark.*
+import io.iden3.rapidsnark.*
 
 // ...
 
@@ -63,7 +63,7 @@ Function that takes zkey and witness files encoded as base64.
 >Large circuits might cause OOM. Use with caution.
 
 ```Kotlin
-import com.iden3.rapidsnark.*
+import io.iden3.rapidsnark.*
 
 // ...
 
@@ -77,7 +77,7 @@ val (proof, publicSignals) =  groth16Prove(zkey, wtns)
 Calculates public buffer size for specified zkey.
 
 ```Kotlin
-import com.iden3.rapidsnark.*
+import io.iden3.rapidsnark.*
 
 // ...
 

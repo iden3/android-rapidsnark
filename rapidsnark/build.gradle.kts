@@ -1,7 +1,26 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
     id("maven-publish")
+}
+
+val githubProperties = Properties()
+githubProperties.load(FileInputStream(rootProject.file("github.properties"))) //Set env variable GPR_USER & GPR_API_KEY if not adding a properties file
+
+repositories {
+    google()
+    mavenCentral()
+    maven {
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/iden3/android-rapidsnark")
+        credentials {
+            username = githubProperties.getProperty("gpr.user")
+            password = githubProperties.getProperty("gpr.key")
+        }
+    }
 }
 
 android {
@@ -68,4 +87,24 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
 }
 
-apply(from = "publish-package.gradle")
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "io.iden3"
+            artifactId = "rapidsnark"
+            version = "0.0.1-alpha.1"
+            artifact("$buildDir/outputs/aar/rapidsnark-release.aar")
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/iden3/android-rapidsnark")
+            credentials {
+                username = githubProperties.getProperty("gpr.user")
+                password = githubProperties.getProperty("gpr.key")
+            }
+        }
+    }
+}
