@@ -1,4 +1,4 @@
-package com.example.rapidsnark_example.ui.theme
+package com.example.android_rapidsnark.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

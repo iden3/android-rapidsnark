@@ -1,4 +1,4 @@
-package com.example.rapidsnark_example.ui.theme
+package com.example.android_rapidsnark.ui.theme
 
 import android.app.Activity
 import android.os.Build
@@ -38,7 +38,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun Rapidsnark_exampleTheme(
+fun android_rapidsnarkTheme(
         darkTheme: Boolean = isSystemInDarkTheme(),
         // Dynamic color is available on Android 12+
         dynamicColor: Boolean = true,

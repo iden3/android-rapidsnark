@@ -5,14 +5,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
-dependencyResolutionManagement {
-    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-    repositories {
-        google()
-        mavenCentral()
-    }
-}
 
-rootProject.name = "rapidsnark_example"
+rootProject.name = "android_rapidsnark"
 include(":app")
-include(":rapidsnark_android")
+include(":rapidsnark")
