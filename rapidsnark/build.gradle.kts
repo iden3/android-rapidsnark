@@ -92,7 +92,7 @@ publishing {
         create<MavenPublication>("maven") {
             groupId = "io.iden3"
             artifactId = "rapidsnark"
-            version = "0.0.1-alpha.1"
+            version = "0.0.1-alpha.2"
             artifact("$buildDir/outputs/aar/rapidsnark-release.aar")
         }
     }
