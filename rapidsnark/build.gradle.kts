@@ -1,26 +1,15 @@
-import java.io.FileInputStream
-import java.util.Properties
+import com.vanniktech.maven.publish.SonatypeHost
 
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
-    id("maven-publish")
+    id("com.vanniktech.maven.publish") version "0.29.0"
+    signing
 }
-
-val githubProperties = Properties()
-githubProperties.load(FileInputStream(rootProject.file("github.properties"))) //Set env variable GPR_USER & GPR_API_KEY if not adding a properties file
 
 repositories {
     google()
     mavenCentral()
-    maven {
-        name = "GitHubPackages"
-        url = uri("https://maven.pkg.github.com/iden3/android-rapidsnark")
-        credentials {
-            username = githubProperties.getProperty("gpr.user")
-            password = githubProperties.getProperty("gpr.key")
-        }
-    }
 }
 
 android {
@@ -75,7 +64,7 @@ android {
     }
 
     publishing {
-        singleVariant("release") {
+        multipleVariants {
             withJavadocJar()
             withSourcesJar()
         }
@@ -87,24 +76,41 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
 }
 
-publishing {
-    publications {
-        create<MavenPublication>("maven") {
-            groupId = "io.iden3"
-            artifactId = "rapidsnark"
-            version = "0.0.1-alpha.2"
-            artifact("$buildDir/outputs/aar/rapidsnark-release.aar")
+mavenPublishing {
+    coordinates("io.iden3", "rapidsnark", "0.0.1-alpha.2")
+
+    pom {
+        name.set("rapidsnark")
+        description.set("This library is Android Kotlin wrapper for the [Rapidsnark](https://github.com/iden3/rapidsnark). It enables the generation of proofs for specified circuits within an Android environment.")
+        inceptionYear.set("2024")
+        url.set("https://github.com/iden3/android-rapidsnark")
+        licenses {
+            license {
+                name.set("GNU General Public License v3.0")
+                url.set("https://github.com/iden3/android-rapidsnark/blob/main/COPYING")
+                distribution.set("https://github.com/iden3/android-rapidsnark/blob/main/COPYING")
+            }
+        }
+        developers {
+            developer {
+                id.set("demonsh")
+                name.set("Dmytro Sukhyi")
+                url.set("https://github.com/demonsh/")
+            }
+            developer {
+                id.set("5eeman")
+                name.set("Yaroslav Moria")
+                url.set("https://github.com/5eeman/")
+            }
+        }
+        scm {
+            url.set("https://github.com/iden3/android-rapidsnark/")
+            connection.set("scm:git:git://github.com/iden3/android-rapidsnark.git")
+            developerConnection.set("scm:git:ssh://git@github.com/iden3/android-rapidsnark.git")
         }
     }
 
-    repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/iden3/android-rapidsnark")
-            credentials {
-                username = githubProperties.getProperty("gpr.user")
-                password = githubProperties.getProperty("gpr.key")
-            }
-        }
-    }
+    publishToMavenCentral(SonatypeHost.DEFAULT)
+
+    signAllPublications()
 }
