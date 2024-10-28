@@ -100,4 +100,4 @@ To run the example project, clone the repo, and run `app` module application.
 
 ## License
 
-android-rapidsnark is part of the iden3 project 0KIMS association. Please check the [COPYING](./COPYING) file for more details.
+android-rapidsnark is part of the iden3 project copyright 2021 0KIMS association and published with LGPL-3 license. Please check the COPYING file for more details.
