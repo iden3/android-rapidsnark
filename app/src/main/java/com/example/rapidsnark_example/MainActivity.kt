@@ -1,25 +1,37 @@
-package com.example.android_rapidsnark
+package com.example.rapidsnark_example
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Context.CLIPBOARD_SERVICE
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContract
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,18 +41,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.documentfile.provider.DocumentFile
 import com.example.android_rapidsnark.ui.theme.android_rapidsnarkTheme
-
-import java.io.ByteArrayOutputStream
-import java.io.File
-import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
-
+import io.iden3.circomwitnesscalc.calculateWitness
 import io.iden3.rapidsnark.*
+import java.io.BufferedReader
+import java.io.File
+import java.io.InputStream
+import java.io.InputStreamReader
 
 
 class MainActivity : ComponentActivity() {
+    private var inputsUri = mutableStateOf<Uri?>(null)
+    private var graphDataUri = mutableStateOf<Uri?>(null)
+    private var zkeyUri = mutableStateOf<Uri?>(null)
+
+    private var errorMessage = mutableStateOf("")
+
+    private val proof = mutableStateOf<ProveResponse?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -50,29 +69,96 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting()
+                    Example(
+                        inputsUri,
+                        graphDataUri,
+                        zkeyUri,
+                        errorMessage,
+                        proof,
+                    )
                 }
             }
         }
     }
 }
 
+var witnessCalcTime = 0
 var executionTime = 0
 
 @Composable
-fun Greeting() {
+fun Example(
+    inputsUri: MutableState<Uri?>,
+    graphDataUri: MutableState<Uri?>,
+    zkeyUri: MutableState<Uri?>,
+    error: MutableState<String>,
+    proof: MutableState<ProveResponse?>,
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
 
-    var proof by remember { mutableStateOf("") }
-    var publicSignals by remember { mutableStateOf("") }
+    val scrollState = ScrollState(0)
+
+    val hasCustomZkey = zkeyUri.value != null
+    val hasCustomInputs = inputsUri.value != null
+    val hasCustomGraphData = graphDataUri.value != null
+
+    val zkeyPicker = rememberLauncherForActivityResult(GetCustomContents()) {
+        if (it.isNotEmpty()) {
+            zkeyUri.value = it.first()
+        }
+    }
+    val inputsPicker = rememberLauncherForActivityResult(GetCustomContents()) {
+        if (it.isNotEmpty()) {
+            inputsUri.value = it.first()
+        }
+    }
+    val graphDataPicker = rememberLauncherForActivityResult(GetCustomContents()) {
+        if (it.isNotEmpty()) {
+            graphDataUri.value = it.first()
+        }
+    }
+
     var useFileProver by remember { mutableStateOf(true) }
 
-    val execTimeSeconds = executionTime / 1000.0
-
     Column(
-        modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(scrollState)
+            .then(modifier),
     ) {
+        Text(if (hasCustomZkey) "Custom zkey from ${zkeyUri.value}" else "Default authV2 zkey selected")
+        Row(horizontalArrangement = Arrangement.SpaceAround) {
+            Button(onClick = { zkeyPicker.launch("application/octet-stream") }) {
+                Text("Select zkey")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = { zkeyUri.value = null }, enabled = zkeyUri.value != null) {
+                Text("Reset zkey")
+            }
+        }
+        Text(if (hasCustomInputs) "Custom inputs from ${inputsUri.value}" else "Default authV2 inputs selected")
+        Row(horizontalArrangement = Arrangement.SpaceAround) {
+            Button(onClick = { inputsPicker.launch("application/json") }) {
+                Text("Select inputs")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = { inputsUri.value = null }, enabled = inputsUri.value != null) {
+                Text("Reset inputs")
+            }
+        }
+        Text(if (hasCustomGraphData) "Custom graph data from ${graphDataUri.value}" else "Default authV2 graph data selected")
+        Row(horizontalArrangement = Arrangement.SpaceAround) {
+            Button(onClick = { graphDataPicker.launch("application/octet-stream") }) {
+                Text("Select graph data")
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = { graphDataUri.value = null }, enabled = graphDataUri.value != null) {
+                Text("Reset graph data")
+            }
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Use file prover")
@@ -83,97 +169,224 @@ fun Greeting() {
             )
         }
         Spacer(modifier = Modifier.height(8.dp))
+        if (error.value.isNotBlank())
+            Text(
+                "Error: " + error.value
+            )
         Text(
-            text = "Execution time: $execTimeSeconds seconds",
+            text = "Execution time: $executionTime millis\nWitness calculation time: $witnessCalcTime millis",
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            modifier = Modifier.fillMaxHeight(fraction = 0.6f),
-            text = "$proof\n$publicSignals",
-        )
+        if (proof.value != null)
+            SelectionContainer {
+                Text(
+                    modifier = Modifier.fillMaxHeight(fraction = 0.6f),
+                    text = "${proof.value!!.proof}\n${proof.value!!.publicSignals}",
+                )
+            }
         Button(
             onClick = {
-                val response = makeProof(context, useFileProver)
-
-                proof = response.proof
-                publicSignals = response.publicSignals
+                makeProof(
+                    context,
+                    useFileProver,
+                    zkeyUri.value,
+                    inputsUri.value,
+                    graphDataUri.value,
+                    onProofReady = { proof.value = it }
+                )
             },
         ) {
             Text("Calculate Proof")
         }
-        Button(
-            onClick = {
-                val text = proof + "\n" + publicSignals
+        if (proof.value != null)
+            Button(
+                onClick = {
+                    val text = proof.value!!.component1() + "\n" + proof.value!!.component2()
 
-                val clipboardService =
-                    context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-                clipboardService.setPrimaryClip(
-                    ClipData.newPlainText(text, text)
-                )
-            },
-        ) {
-            Text("Copy proof to clipboard")
-        }
+                    val clipboardService =
+                        context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                    clipboardService.setPrimaryClip(
+                        ClipData.newPlainText(text, text)
+                    )
+                },
+            ) {
+                Text("Copy proof to clipboard")
+            }
     }
-
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     android_rapidsnarkTheme {
-        Greeting()
+        Example(
+            mutableStateOf(null),
+            mutableStateOf(null),
+            mutableStateOf(null),
+            mutableStateOf(""),
+            mutableStateOf(null),
+        )
     }
 }
 
-fun makeProof(context: Context, useFileProver: Boolean): ProveResponse {
-    val witness = readFileFromAssets(context, "witness.wtns")
+class GetCustomContents(
+    private val isMultiple: Boolean = false, //This input check if the select file option is multiple or not
+) : ActivityResultContract<String, List<@JvmSuppressWildcards Uri>>() {
 
-    val executionStart: Long
+    override fun createIntent(context: Context, input: String): Intent {
+        return Intent(Intent.ACTION_GET_CONTENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = input //The input option es the MIME Type that you need to use
+            putExtra(Intent.EXTRA_LOCAL_ONLY, true) //Return data on the local device
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, isMultiple) //If select one or more files
+                .addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+    }
 
-    val result = if (useFileProver) {
-        val zkeyFilePath = context.externalCacheDir!!.absolutePath + "/circuit_final.zkey"
-        val zkeyFile = File(zkeyFilePath)
-        if (!zkeyFile.exists()) {
-            val zkeyInputStream = context.assets.open("circuit_final.zkey")
-            val zkeyOutputStream = zkeyFile.outputStream()
-            copyFile(zkeyInputStream, zkeyOutputStream)
+    override fun parseResult(resultCode: Int, intent: Intent?): List<Uri> {
+        return intent.takeIf {
+            resultCode == Activity.RESULT_OK
+        }?.getClipDataUris() ?: emptyList()
+    }
+
+    internal companion object {
+
+        //Collect all Uris from files selected
+        internal fun Intent.getClipDataUris(): List<Uri> {
+            // Use a LinkedHashSet to maintain any ordering that may be
+            // present in the ClipData
+            val resultSet = LinkedHashSet<Uri>()
+            data?.let { data ->
+                resultSet.add(data)
+            }
+            val clipData = clipData
+            if (clipData == null && resultSet.isEmpty()) {
+                return emptyList()
+            } else if (clipData != null) {
+                for (i in 0 until clipData.itemCount) {
+                    val uri = clipData.getItemAt(i).uri
+                    if (uri != null) {
+                        resultSet.add(uri)
+                    }
+                }
+            }
+            return ArrayList(resultSet)
+        }
+    }
+}
+
+var proofCalcThread: Thread? = null
+
+fun makeProof(
+    context: Context,
+    useFileProver: Boolean,
+    zkeyUri: Uri?,
+    inputsUri: Uri?,
+    graphDataUri: Uri?,
+    onProofReady: (ProveResponse) -> Unit
+) {
+    val inputs = if (inputsUri == null) {
+        context.assets.open("authV2_inputs.json").readContents()
+    } else {
+        context.contentResolver.openInputStream(inputsUri)!!.readContents()
+    }
+
+    val graphData = if (graphDataUri == null) {
+        context.assets.open("authV2.wcd").loadIntoBytes()
+    } else {
+        context.contentResolver.openInputStream(graphDataUri)!!.loadIntoBytes()
+    }
+
+    var executionStart = System.currentTimeMillis()
+
+    val witness = calculateWitness(inputs = inputs, graphData = graphData)
+
+    witnessCalcTime = (System.currentTimeMillis() - executionStart).toInt()
+
+    if (useFileProver) {
+
+        val zkeyFilePath: String
+
+        if (zkeyUri == null) {
+            // Copy authV2 file from assets to cache folder and use it
+            val zkeyFile = File(context.cacheDir, "authV2.zkey")
+            if (!zkeyFile.exists()) {
+                context.assets.open("authV2.zkey").use {
+                    zkeyFile.outputStream().use { outputStream ->
+                        it.copyTo(outputStream)
+                    }
+                }
+            }
+            zkeyFilePath = zkeyFile.path
+        } else {
+            // Copy zkey file from uri to cache folder and use it
+            val documentFile = DocumentFile.fromSingleUri(context, zkeyUri)
+            val fileName = documentFile!!.name
+
+            val zkeyFile = File(context.cacheDir, fileName!!)
+            if (!zkeyFile.exists()) {
+                context.contentResolver.openInputStream(zkeyUri)!!.use {
+                    zkeyFile.outputStream().use { outputStream ->
+                        it.copyTo(outputStream)
+                    }
+                }
+            }
+            zkeyFilePath = zkeyFile.path
         }
 
-        executionStart = System.currentTimeMillis()
+        proofCalcThread = Thread {
+            executionStart = System.currentTimeMillis()
+            val proof = groth16ProveWithZKeyFilePath(zkeyFilePath, witness)
 
-        groth16ProveWithZKeyFilePath(zkeyFilePath, witness)
+            executionTime = (System.currentTimeMillis() - executionStart).toInt()
+
+            proofCalcThread = null
+
+            onProofReady(proof)
+        }
+        proofCalcThread?.start()
     } else {
-        val zkey: ByteArray = readFileFromAssets(context, "circuit_final.zkey")
 
-        executionStart = System.currentTimeMillis()
+        val zkey = if (zkeyUri == null) {
+            context.assets.open("authV2.zkey").loadIntoBytes()
+        } else {
+            context.contentResolver.openInputStream(zkeyUri)!!.loadIntoBytes()
+        }
 
-        groth16Prove(zkey, witness)
+        proofCalcThread = Thread {
+            executionStart = System.currentTimeMillis()
+            val proof = groth16Prove(zkey, witness)
+
+            executionTime = (System.currentTimeMillis() - executionStart).toInt()
+
+            proofCalcThread = null
+
+            onProofReady(proof)
+        }
+        proofCalcThread?.start()
     }
-
-    executionTime = (System.currentTimeMillis() - executionStart).toInt()
-
-    return result
 }
 
-@Throws(IOException::class)
-private fun copyFile(`in`: InputStream, out: OutputStream) {
-    val buffer = ByteArray(1024)
-    var read: Int
-    while (`in`.read(buffer).also { read = it } != -1) {
-        out.write(buffer, 0, read)
+private fun InputStream.loadIntoBytes(): ByteArray {
+    use {
+        val buf = ByteArray(available())
+        read(buf)
+        return buf
     }
 }
 
-fun readFileFromAssets(context: Context, assetName: String): ByteArray {
-    val inputStream: InputStream = context.assets.open(assetName)
-
-    val buffer = ByteArray(16384)
-    val output = ByteArrayOutputStream()
-    var bytesRead: Int
-    while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-        output.write(buffer, 0, bytesRead)
+private fun InputStream.readContents(): String {
+    use {
+        BufferedReader(InputStreamReader(this)).use {
+            val sb = StringBuilder()
+            var s = it.readLine()
+            while (s != null) {
+                sb.append(s)
+                s = it.readLine()
+            }
+            return sb.toString()
+        }
     }
-
-    return output.toByteArray()
 }
