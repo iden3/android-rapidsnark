@@ -118,8 +118,6 @@ fun Example(
         }
     }
 
-    var useFileProver by remember { mutableStateOf(true) }
-
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -159,15 +157,6 @@ fun Example(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Use file prover")
-            Spacer(modifier = Modifier.width(8.dp))
-            Switch(
-                checked = useFileProver,
-                onCheckedChange = { useFileProver = it },
-            )
-        }
         Spacer(modifier = Modifier.height(8.dp))
         if (error.value.isNotBlank())
             Text(
@@ -188,7 +177,6 @@ fun Example(
             onClick = {
                 makeProof(
                     context,
-                    useFileProver,
                     zkeyUri.value,
                     inputsUri.value,
                     graphDataUri.value,
@@ -281,7 +269,6 @@ var proofCalcThread: Thread? = null
 
 fun makeProof(
     context: Context,
-    useFileProver: Boolean,
     zkeyUri: Uri?,
     inputsUri: Uri?,
     graphDataUri: Uri?,
@@ -304,8 +291,6 @@ fun makeProof(
     val witness = calculateWitness(inputs = inputs, graphData = graphData)
 
     witnessCalcTime = (System.currentTimeMillis() - executionStart).toInt()
-
-    if (useFileProver) {
 
         val zkeyFilePath: String
 
@@ -338,7 +323,7 @@ fun makeProof(
 
         proofCalcThread = Thread {
             executionStart = System.currentTimeMillis()
-            val proof = groth16ProveWithZKeyFilePath(zkeyFilePath, witness)
+            val proof = groth16Prove(zkeyFilePath, witness)
 
             executionTime = (System.currentTimeMillis() - executionStart).toInt()
 
@@ -347,26 +332,6 @@ fun makeProof(
             onProofReady(proof)
         }
         proofCalcThread?.start()
-    } else {
-
-        val zkey = if (zkeyUri == null) {
-            context.assets.open("authV2.zkey").loadIntoBytes()
-        } else {
-            context.contentResolver.openInputStream(zkeyUri)!!.loadIntoBytes()
-        }
-
-        proofCalcThread = Thread {
-            executionStart = System.currentTimeMillis()
-            val proof = groth16Prove(zkey, witness)
-
-            executionTime = (System.currentTimeMillis() - executionStart).toInt()
-
-            proofCalcThread = null
-
-            onProofReady(proof)
-        }
-        proofCalcThread?.start()
-    }
 }
 
 private fun InputStream.loadIntoBytes(): ByteArray {
