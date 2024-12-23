@@ -110,7 +110,7 @@ mavenPublishing {
         }
     }
 
-    publishToMavenCentral(SonatypeHost.DEFAULT)
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
 
     signAllPublications()
 }
