@@ -28,8 +28,8 @@ JNIEXPORT jint JNICALL Java_io_iden3_rapidsnark_RapidsnarkJniBridge_groth16Prove
     jlong *nativeProofSizeArr = env->GetLongArrayElements(proofSize, 0);
     jlong *nativePublicSizeArr = env->GetLongArrayElements(publicSize, 0);
 
-    unsigned long nativeProofSize = nativeProofSizeArr[0];
-    unsigned long nativePublicSize = nativePublicSizeArr[0];
+    unsigned long long nativeProofSize = nativeProofSizeArr[0];
+    unsigned long long nativePublicSize = nativePublicSizeArr[0];
 
     // Call the groth16_prover function
     int result = groth16_prover(
@@ -82,8 +82,8 @@ JNIEXPORT jint JNICALL Java_io_iden3_rapidsnark_RapidsnarkJniBridge_groth16Prove
     jlong *nativeProofSizeArr = env->GetLongArrayElements(proofSize, 0);
     jlong *nativePublicSizeArr = env->GetLongArrayElements(publicSize, 0);
 
-    unsigned long nativeProofSize = nativeProofSizeArr[0];
-    unsigned long nativePublicSize = nativePublicSizeArr[0];
+    unsigned long long nativeProofSize = nativeProofSizeArr[0];
+    unsigned long long nativePublicSize = nativePublicSizeArr[0];
 
     // Call the groth16_prover function`
     int status_code = groth16_prover_zkey_file(
@@ -160,11 +160,11 @@ JNIEXPORT jlong JNICALL Java_io_iden3_rapidsnark_RapidsnarkJniBridge_groth16Publ
     // Call the groth16_public_size_for_zkey_buf function
     int status_code = groth16_public_size_for_zkey_buf(
             nativeZkeyBuffer, zkeySize,
-            (size_t *) &nativePublicSize,
+            (unsigned long long *) &nativePublicSize,
             nativeErrorMsg, errorMsgMaxSize
     );
 
-    LOGI("groth16_public_size_for_zkey_buf:%lu", nativePublicSize);
+    LOGI("groth16_public_size_for_zkey_buf:%i", status_code);
 
     // Release the native buffers
     env->ReleaseByteArrayElements(zkeyBuffer, (jbyte *) nativeZkeyBuffer, 0);
@@ -189,11 +189,11 @@ JNIEXPORT jlong JNICALL Java_io_iden3_rapidsnark_RapidsnarkJniBridge_groth16Publ
     // Call the groth16_public_size_for_zkey_file function
     int status_code = groth16_public_size_for_zkey_file(
             nativeZkeyPath,
-            (unsigned long *) &nativePublicSize,
-            nativeErrorMsg, errorMsgMaxSize
+            (unsigned long long *) &nativePublicSize,
+            nativeErrorMsg, 0
     );
 
-    LOGI("groth16_public_size_for_zkey_file:%lu", nativePublicSize);
+    LOGI("groth16_public_size_for_zkey_file:%i", status_code);
 
     // Release the native buffers
     env->ReleaseStringUTFChars(zkeyPath, nativeZkeyPath);

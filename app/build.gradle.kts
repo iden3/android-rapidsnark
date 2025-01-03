@@ -56,7 +56,7 @@ android {
 }
 
 dependencies {
-    implementation("io.iden3:rapidsnark:0.0.1-alpha.2")
+    implementation(project(":rapidsnark"))
     implementation("io.iden3:circomwitnesscalc:0.0.1-alpha.1")
 
     implementation("androidx.core:core-ktx:1.10.1")
