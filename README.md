@@ -82,4 +82,11 @@ To run the example project, clone the repo, and run `app` module application.
 
 ## License
 
-android-rapidsnark is part of the iden3 project copyright 2021 0KIMS association and published with LGPL-3 license. Please check the COPYING file for more details.
+The project is licensed under either of
+
+- [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0) ([`LICENSE-APACHE`](LICENSE-APACHE))
+- [MIT license](https://opensource.org/licenses/MIT) ([`LICENSE-MIT`](LICENSE-MIT))
+
+at your option.
+
+- **Rapidsnark**  is licensed under the [LGPL-3](https://github.com/iden3/rapidsnark/blob/main/COPYING)
