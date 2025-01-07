@@ -23,7 +23,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags += "-O2 -frtti -fexceptions -Wall -fstack-protector-all"
+                cppFlags += "-O2 -frtti -fexceptions -Wall"
                 abiFilters += listOf("x86_64", "arm64-v8a")
             }
         }
@@ -77,7 +77,7 @@ dependencies {
 }
 
 mavenPublishing {
-    coordinates("io.iden3", "rapidsnark", "0.0.1-alpha.2")
+    coordinates("io.iden3", "rapidsnark", "0.0.1-beta.1")
 
     pom {
         name.set("rapidsnark")
@@ -86,9 +86,14 @@ mavenPublishing {
         url.set("https://github.com/iden3/android-rapidsnark")
         licenses {
             license {
-                name.set("GNU General Public License v3.0")
-                url.set("https://github.com/iden3/android-rapidsnark/blob/main/COPYING")
-                distribution.set("https://github.com/iden3/android-rapidsnark/blob/main/COPYING")
+                name.set("Apache-2.0")
+                url.set("https://github.com/iden3/android-rapidsnark/blob/main/LICENSE-APACHE")
+                distribution.set("https://github.com/iden3/android-rapidsnark/blob/main/LICENSE-APACHE")
+            }
+            license {
+                name.set("MIT")
+                url.set("https://github.com/iden3/android-rapidsnark/blob/main/LICENSE-MIT")
+                distribution.set("https://github.com/iden3/android-rapidsnark/blob/main/LICENSE-MIT")
             }
         }
         developers {
