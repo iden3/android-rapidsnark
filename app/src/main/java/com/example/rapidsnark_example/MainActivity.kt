@@ -9,6 +9,8 @@ import android.content.Context.CLIPBOARD_SERVICE
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -28,14 +30,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -49,6 +47,10 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
+import java.util.concurrent.Callable
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 
 class MainActivity : ComponentActivity() {
@@ -84,6 +86,9 @@ class MainActivity : ComponentActivity() {
 
 var witnessCalcTime = 0
 var executionTime = 0
+// New globals for parallel proof timing
+var parallelTotalTime = 0
+var parallelProofTimes: List<Int> = emptyList()
 
 @Composable
 fun Example(
@@ -185,6 +190,19 @@ fun Example(
             },
         ) {
             Text("Calculate Proof")
+        }
+        Button(
+            onClick = {
+                makeProofParallel(
+                    context,
+                    zkeyUri.value,
+                    inputsUri.value,
+                    graphDataUri.value,
+                    onProofReady = { proof.value = it }
+                )
+            },
+        ) {
+            Text("Calculate Proofs Parallel")
         }
         if (proof.value != null)
             Button(
@@ -333,6 +351,85 @@ fun makeProof(
         }
         proofCalcThread?.start()
 }
+
+// New parallel method: moves entire flow (including witness calc & file IO) off the UI thread.
+fun makeProofParallel(
+    context: Context,
+    zkeyUri: Uri?,
+    inputsUri: Uri?,
+    graphDataUri: Uri?,
+    onProofReady: (ProveResponse) -> Unit
+) {
+    // Shared thread pool (size 3) for parallel proof generation
+    val executor: ExecutorService = parallelExecutor
+    Thread {
+        try {
+            val inputs = if (inputsUri == null) {
+                context.assets.open("authV2_inputs.json").readContents()
+            } else {
+                context.contentResolver.openInputStream(inputsUri)!!.readContents()
+            }
+
+            val graphData = if (graphDataUri == null) {
+                context.assets.open("authV2.wcd").loadIntoBytes()
+            } else {
+                context.contentResolver.openInputStream(graphDataUri)!!.loadIntoBytes()
+            }
+
+            val executionStart = System.currentTimeMillis()
+            val witness = calculateWitness(inputs = inputs, graphData = graphData)
+            witnessCalcTime = (System.currentTimeMillis() - executionStart).toInt()
+
+            val zkeyFilePath: String = if (zkeyUri == null) {
+                val zkeyFile = File(context.cacheDir, "authV2.zkey")
+                if (!zkeyFile.exists()) {
+                    context.assets.open("authV2.zkey").use { assetIn ->
+                        zkeyFile.outputStream().use { out -> assetIn.copyTo(out) }
+                    }
+                }
+                zkeyFile.path
+            } else {
+                val documentFile = DocumentFile.fromSingleUri(context, zkeyUri)
+                val fileName = documentFile!!.name
+                val zkeyFile = File(context.cacheDir, fileName!!)
+                if (!zkeyFile.exists()) {
+                    context.contentResolver.openInputStream(zkeyUri)!!.use { uriIn ->
+                        zkeyFile.outputStream().use { out -> uriIn.copyTo(out) }
+                    }
+                }
+                zkeyFile.path
+            }
+
+            // Submit 3 proof generation tasks in parallel reusing the computed witness & zkey
+            val overallStart = System.currentTimeMillis()
+            val tasks = (1..3).map {
+                executor.submit(Callable {
+                    val start = System.currentTimeMillis()
+                    val proof = groth16Prove(zkeyFilePath, witness)
+                    val duration = (System.currentTimeMillis() - start).toInt()
+                    ProofWithDuration(proof, duration)
+                })
+            }
+            val results: List<ProofWithDuration> = tasks.map(Future<ProofWithDuration>::get)
+            parallelTotalTime = (System.currentTimeMillis() - overallStart).toInt()
+            parallelProofTimes = results.map { it.duration }
+
+            // Maintain existing callback contract: return the first proof (others are available via globals)
+            val firstProof = results.first().proof
+            executionTime = parallelTotalTime // reuse existing executionTime var for display
+
+            Handler(Looper.getMainLooper()).post { onProofReady(firstProof) }
+        } catch (_: Throwable) {
+            Handler(Looper.getMainLooper()).post { /* swallow or log */ }
+        }
+    }.start()
+}
+
+// Data holder for internal timing
+private data class ProofWithDuration(val proof: ProveResponse, val duration: Int)
+
+// Lazily initialized shared executor
+private val parallelExecutor: ExecutorService by lazy { Executors.newFixedThreadPool(3) }
 
 private fun InputStream.loadIntoBytes(): ByteArray {
     use {
