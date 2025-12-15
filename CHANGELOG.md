@@ -1,4 +1,4 @@
-## 0.0.1-beta.2 (2025-11-06)
+## 0.0.1-beta.2 (2025-12-15)
 
 Updated native libs to support 16k page size.
 
