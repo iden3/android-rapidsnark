@@ -25,6 +25,7 @@ android {
             cmake {
                 cppFlags += "-O2 -frtti -fexceptions -Wall"
                 abiFilters += listOf("x86_64", "arm64-v8a")
+                arguments += listOf("-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")
             }
         }
         ndk {
@@ -77,7 +78,7 @@ dependencies {
 }
 
 mavenPublishing {
-    coordinates("io.iden3", "rapidsnark", "0.0.1-beta.1")
+    coordinates("io.iden3", "rapidsnark", "0.0.1-beta.2")
 
     pom {
         name.set("rapidsnark")
