@@ -53,8 +53,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlin {
-        jvmToolchain(8)
         compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
             freeCompilerArgs.addAll(listOf("-Xjvm-default=all"))
         }
     }
