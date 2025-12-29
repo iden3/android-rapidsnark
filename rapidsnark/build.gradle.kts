@@ -78,7 +78,7 @@ dependencies {
 }
 
 mavenPublishing {
-    coordinates("io.iden3", "rapidsnark", "0.0.1-beta.3")
+    coordinates("io.iden3", "rapidsnark", "0.0.1-beta.4")
 
     pom {
         name.set("rapidsnark")

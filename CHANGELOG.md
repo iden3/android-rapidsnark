@@ -1,3 +1,7 @@
+## 0.0.1-beta.4 (2025-12-29)
+
+Updated Gradle build tools.
+
 ## 0.0.1-beta.3 (2025-12-29)
 
 Fixed and updated rapidsnark native lib.
