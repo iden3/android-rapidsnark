@@ -14,12 +14,12 @@ repositories {
 
 android {
     namespace = "com.example.android_rapidsnark"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.android_rapidsnark"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
@@ -57,7 +57,7 @@ android {
 
 dependencies {
     implementation(project(":rapidsnark"))
-    implementation("io.iden3:circomwitnesscalc:0.0.1-alpha.4")
+    implementation("io.iden3:circomwitnesscalc:0.0.1-beta.1")
 
     implementation("androidx.core:core-ktx:1.10.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")

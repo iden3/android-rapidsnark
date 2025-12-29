@@ -35,6 +35,10 @@ set_target_properties(
         PROPERTIES
         IMPORTED_LOCATION ${SHARED_PROVER_LIBRARY_SO}
 )
+
+# ✅ Add 16 KB alignment for ARM64 / x86_64
+target_link_options(${PROJECT_NAME} PRIVATE "-Wl,-z,max-page-size=16384")
+
 # Add the library to this project
 target_link_libraries(
         ${PROJECT_NAME}

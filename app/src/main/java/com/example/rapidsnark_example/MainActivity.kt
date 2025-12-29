@@ -28,14 +28,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -44,7 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import com.example.android_rapidsnark.ui.theme.android_rapidsnarkTheme
 import io.iden3.circomwitnesscalc.calculateWitness
-import io.iden3.rapidsnark.*
+import io.iden3.rapidsnark.ProveResponse
+import io.iden3.rapidsnark.groth16Prove
+import io.iden3.rapidsnark.groth16Verify
 import java.io.BufferedReader
 import java.io.File
 import java.io.InputStream
@@ -166,13 +164,8 @@ fun Example(
             text = "Execution time: $executionTime millis\nWitness calculation time: $witnessCalcTime millis",
         )
         Spacer(modifier = Modifier.height(8.dp))
-        if (proof.value != null)
-            SelectionContainer {
-                Text(
-                    modifier = Modifier.fillMaxHeight(fraction = 0.6f),
-                    text = "${proof.value!!.proof}\n${proof.value!!.publicSignals}",
-                )
-            }
+
+
         Button(
             onClick = {
                 makeProof(
@@ -189,6 +182,32 @@ fun Example(
         if (proof.value != null)
             Button(
                 onClick = {
+                    val vk = context.assets.open("authV2_verification_key.json").readContents()
+                    try {
+                        val valid = groth16Verify(
+                            proof = proof.value!!.proof,
+                            inputs = proof.value!!.publicSignals,
+                            verificationKey = vk,
+                        )
+
+                        if (valid) {
+                            error.value = "Proof is valid"
+                        } else {
+                            error.value = "Proof is NOT valid"
+                        }
+                    } catch (e: Exception) {
+                        error.value = e.message ?: "Unknown verification error"
+                        return@Button
+                    }
+
+                },
+            ) {
+                Text("Verify Proof")
+            }
+        Spacer(modifier = Modifier.height(8.dp))
+        if (proof.value != null)
+            Button(
+                onClick = {
                     val text = proof.value!!.component1() + "\n" + proof.value!!.component2()
 
                     val clipboardService =
@@ -200,6 +219,15 @@ fun Example(
             ) {
                 Text("Copy proof to clipboard")
             }
+        Spacer(modifier = Modifier.height(8.dp))
+        if (proof.value != null)
+            SelectionContainer {
+                Text(
+                    modifier = Modifier.fillMaxHeight(fraction = 0.6f),
+                    text = "${proof.value!!.proof}\n${proof.value!!.publicSignals}",
+                )
+            }
+
     }
 }
 
@@ -292,46 +320,46 @@ fun makeProof(
 
     witnessCalcTime = (System.currentTimeMillis() - executionStart).toInt()
 
-        val zkeyFilePath: String
+    val zkeyFilePath: String
 
-        if (zkeyUri == null) {
-            // Copy authV2 file from assets to cache folder and use it
-            val zkeyFile = File(context.cacheDir, "authV2.zkey")
-            if (!zkeyFile.exists()) {
-                context.assets.open("authV2.zkey").use {
-                    zkeyFile.outputStream().use { outputStream ->
-                        it.copyTo(outputStream)
-                    }
+    if (zkeyUri == null) {
+        // Copy authV2 file from assets to cache folder and use it
+        val zkeyFile = File(context.cacheDir, "authV2.zkey")
+        if (!zkeyFile.exists()) {
+            context.assets.open("authV2.zkey").use {
+                zkeyFile.outputStream().use { outputStream ->
+                    it.copyTo(outputStream)
                 }
             }
-            zkeyFilePath = zkeyFile.path
-        } else {
-            // Copy zkey file from uri to cache folder and use it
-            val documentFile = DocumentFile.fromSingleUri(context, zkeyUri)
-            val fileName = documentFile!!.name
+        }
+        zkeyFilePath = zkeyFile.path
+    } else {
+        // Copy zkey file from uri to cache folder and use it
+        val documentFile = DocumentFile.fromSingleUri(context, zkeyUri)
+        val fileName = documentFile!!.name
 
-            val zkeyFile = File(context.cacheDir, fileName!!)
-            if (!zkeyFile.exists()) {
-                context.contentResolver.openInputStream(zkeyUri)!!.use {
-                    zkeyFile.outputStream().use { outputStream ->
-                        it.copyTo(outputStream)
-                    }
+        val zkeyFile = File(context.cacheDir, fileName!!)
+        if (!zkeyFile.exists()) {
+            context.contentResolver.openInputStream(zkeyUri)!!.use {
+                zkeyFile.outputStream().use { outputStream ->
+                    it.copyTo(outputStream)
                 }
             }
-            zkeyFilePath = zkeyFile.path
         }
+        zkeyFilePath = zkeyFile.path
+    }
 
-        proofCalcThread = Thread {
-            executionStart = System.currentTimeMillis()
-            val proof = groth16Prove(zkeyFilePath, witness)
+    proofCalcThread = Thread {
+        executionStart = System.currentTimeMillis()
+        val proof = groth16Prove(zkeyFilePath, witness)
 
-            executionTime = (System.currentTimeMillis() - executionStart).toInt()
+        executionTime = (System.currentTimeMillis() - executionStart).toInt()
 
-            proofCalcThread = null
+        proofCalcThread = null
 
-            onProofReady(proof)
-        }
-        proofCalcThread?.start()
+        onProofReady(proof)
+    }
+    proofCalcThread?.start()
 }
 
 private fun InputStream.loadIntoBytes(): ByteArray {

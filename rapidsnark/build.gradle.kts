@@ -14,7 +14,7 @@ repositories {
 
 android {
     namespace = "io.iden3.rapidsnark"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24
@@ -23,7 +23,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags += "-O2 -frtti -fexceptions -Wall"
+                cppFlags += "-O2 -frtti -fexceptions -Wall -fstack-protector-all"
                 abiFilters += listOf("x86_64", "arm64-v8a")
                 arguments += listOf("-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")
             }
@@ -78,7 +78,7 @@ dependencies {
 }
 
 mavenPublishing {
-    coordinates("io.iden3", "rapidsnark", "0.0.1-beta.2")
+    coordinates("io.iden3", "rapidsnark", "0.0.1-beta.3")
 
     pom {
         name.set("rapidsnark")
