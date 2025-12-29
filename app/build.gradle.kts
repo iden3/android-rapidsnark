@@ -32,6 +32,7 @@ android {
 
     lint {
         disable += "AutoboxingStateCreation"
+        disable += "MutableCollectionMutableState"
     }
 
     buildTypes {
