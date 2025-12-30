@@ -117,7 +117,7 @@ mavenPublishing {
         }
     }
 
-    publishToMavenCentral()
+    publishToMavenCentral(true)
 
     signAllPublications()
 }
