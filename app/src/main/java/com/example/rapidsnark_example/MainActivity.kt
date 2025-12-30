@@ -179,6 +179,20 @@ fun Example(
         ) {
             Text("Calculate Proof")
         }
+        Button(
+            onClick = {
+                for (i in 1..5)
+                    makeProof(
+                        context,
+                        zkeyUri.value,
+                        inputsUri.value,
+                        graphDataUri.value,
+                        onProofReady = { proof.value = it }
+                    )
+            },
+        ) {
+            Text("Calculate Proof (5x)")
+        }
         if (proof.value != null)
             Button(
                 onClick = {
@@ -293,8 +307,6 @@ class GetCustomContents(
     }
 }
 
-var proofCalcThread: Thread? = null
-
 fun makeProof(
     context: Context,
     zkeyUri: Uri?,
@@ -349,17 +361,15 @@ fun makeProof(
         zkeyFilePath = zkeyFile.path
     }
 
-    proofCalcThread = Thread {
+    Thread {
         executionStart = System.currentTimeMillis()
         val proof = groth16Prove(zkeyFilePath, witness)
 
         executionTime = (System.currentTimeMillis() - executionStart).toInt()
 
-        proofCalcThread = null
 
         onProofReady(proof)
-    }
-    proofCalcThread?.start()
+    }.start()
 }
 
 private fun InputStream.loadIntoBytes(): ByteArray {

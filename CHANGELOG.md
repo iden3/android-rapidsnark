@@ -1,3 +1,7 @@
+## 0.0.1-beta.5 (2025-12-30)
+
+Updated native libs to work with concurrent execution.
+
 ## 0.0.1-beta.4 (2025-12-29)
 
 Updated Gradle build tools.
