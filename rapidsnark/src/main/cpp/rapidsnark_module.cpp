@@ -32,6 +32,10 @@ JNIEXPORT jint JNICALL Java_io_iden3_rapidsnark_RapidsnarkJniBridge_groth16Prove
     unsigned long long nativePublicSize = nativePublicSizeArr[0];
 
     // Call the groth16_prover function
+    // NOTE: passes nullptr for the new `cache_file_path` parameter; this buffer
+    // variant isn't exercised by the Android Kotlin bridge (which routes through
+    // groth16ProveWithZKeyFilePath). The nullptr keeps the build green without
+    // widening the JNI signature for an unused path.
     int result = groth16_prover(
             nativeZkeyBuffer, zkeySize,
             nativeWtnsBuffer, wtnsSize,
@@ -66,12 +70,14 @@ JNIEXPORT jint JNICALL Java_io_iden3_rapidsnark_RapidsnarkJniBridge_groth16Prove
         jbyteArray wtnsBuffer, jlong wtnsSize,
         jbyteArray proofBuffer, jlongArray proofSize,
         jbyteArray publicBuffer, jlongArray publicSize,
+        jstring cacheFilePath,
         jbyteArray errorMsg, jlong errorMsgMaxSize
 ) {
     LOGI("groth16ProverZkeyFile native called");
 
     // Convert jbyteArray to native types
     const char *nativeZkeyPath = env->GetStringUTFChars(zkeyPath, nullptr);
+    const char *nativeCacheFilePath = env->GetStringUTFChars(cacheFilePath, nullptr);
 
     void *nativeWtnsBuffer = env->GetByteArrayElements(wtnsBuffer, nullptr);
 
@@ -102,6 +108,8 @@ JNIEXPORT jint JNICALL Java_io_iden3_rapidsnark_RapidsnarkJniBridge_groth16Prove
     env->SetLongArrayRegion(publicSize, 0, 1, (jlong *) nativePublicSizeArr);
 
     // Release the native buffers
+    env->ReleaseStringUTFChars(zkeyPath, nativeZkeyPath);
+    env->ReleaseStringUTFChars(cacheFilePath, nativeCacheFilePath);
     env->ReleaseByteArrayElements(wtnsBuffer, (jbyte *) nativeWtnsBuffer, 0);
     env->ReleaseByteArrayElements(proofBuffer, (jbyte *) nativeProofBuffer, 0);
     env->ReleaseByteArrayElements(publicBuffer, (jbyte *) nativePublicBuffer, 0);

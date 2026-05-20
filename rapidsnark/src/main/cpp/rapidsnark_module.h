@@ -24,6 +24,7 @@ JNIEXPORT jint JNICALL Java_io_iden3_rapidsnark_RapidsnarkJniBridge_groth16Prove
         jbyteArray wtnsBuffer, jlong wtnsSize,
         jbyteArray proofBuffer, jlongArray proofSize,
         jbyteArray publicBuffer, jlongArray publicSize,
+        jstring cacheFilePath,
         jbyteArray errorMsg, jlong errorMsgMaxSize
 );
 

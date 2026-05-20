@@ -16,3 +16,12 @@
 local.properties
 
 github.properties
+
+.idea
+
+# Active-slot native libs populated by benchmark/use-libs.sh.
+# Canonical copies live under rapidsnark/src/libs/{old,new}/.
+rapidsnark/src/jniLibs/**/*.so
+
+# Benchmark output pulled from device.
+benchmark/results/
